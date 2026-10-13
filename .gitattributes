@@ -1,0 +1,3 @@
+# Keep every file byte-for-byte as committed: manifest.json pins SHA-256 hashes of the
+# files that installations download from raw.githubusercontent.com / jsDelivr.
+* -text

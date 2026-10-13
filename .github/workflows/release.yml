@@ -1,0 +1,31 @@
+name: Release
+
+# Push a tag like v1.2.3 (matching manifest.json) to publish a release.
+# Installed copies poll releases/latest/download/manifest.json and update themselves.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/check.mjs
+      - run: node tools/build-manifest.mjs --check --tag "$GITHUB_REF_NAME"
+      - name: Package
+        run: |
+          mkdir -p out
+          git archive --format=zip --prefix=antigravity-zh-cn/ -o "out/antigravity-zh-cn-$GITHUB_REF_NAME.zip" "$GITHUB_REF_NAME"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" manifest.json "out/antigravity-zh-cn-$GITHUB_REF_NAME.zip" \
+            --title "$GITHUB_REF_NAME" --generate-notes --latest

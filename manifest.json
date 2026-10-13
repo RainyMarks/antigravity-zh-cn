@@ -1,0 +1,17 @@
+{
+  "name": "antigravity-zh-cn",
+  "version": "1.0.0",
+  "tag": "v1.0.0",
+  "testedAppVersion": "2.23.0",
+  "files": {
+    "agzh.ps1": "087216aa254158d861362046859cd4fa38375a48297473cdf1d3f9ddd67a614a",
+    "install.ps1": "c6a38af521a33e019fe97ac16444eb5fdc4370b22d3276b10a710af49f0d4a0f",
+    "patcher.js": "5e4dd9b6e59549cad576a713387303853d43f828909632314db137eb27469604",
+    "安装汉化.cmd": "f4c30d6d714c609d64ffe32de75062e4c2783a04ef00d4299fa8b537798379fd",
+    "卸载汉化.cmd": "ee1a39231d96f92391955704d7f414dc700ab7706f5a29d40faa3b33b40cc6cc",
+    "zh-cn/dict.json": "d0bd4791e7ee764269a819f7acbf28a687432010144f043c0465375b38f0d039",
+    "zh-cn/hook.js": "5baf633143190aa5cc593337a7eb258e329822b9a37578bc6055db838900a97c",
+    "zh-cn/shell.js": "e7705f69ed9ebd2fe74b5bcb12d6f1c2f694f6c1c5aa84319c300acceb66edea",
+    "zh-cn/translator.js": "f8705a0ec48b210b3118862e2b7747d81cb275c2097651e0010fef53d33db190"
+  }
+}
