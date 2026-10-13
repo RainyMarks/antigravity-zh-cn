@@ -54,7 +54,7 @@ powershell -ExecutionPolicy Bypass -File $agzh -Action Update   # 立即检查�
 
 ## 卸载
 
-双击 `卸载汉化.cmd`（或运行 `agzh.ps1 -Action Uninstall`）：还原英文原版 `app.asar`、删除计划任务，并可选择删除补丁文件。
+双击 `%LOCALAPPDATA%\antigravity-zh-cn\卸载汉化.cmd`（或 zip 包里的同名文件，或运行 `agzh.ps1 -Action Uninstall`）：还原英文原版 `app.asar`、删除计划任务，并可选择删除补丁文件。
 
 ## 汉化范围
 

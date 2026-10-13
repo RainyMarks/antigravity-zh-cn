@@ -11,12 +11,10 @@ import crypto from 'node:crypto';
 import { ROOT, readJson } from './lib.mjs';
 
 // Files an installation needs (downloaded by install.ps1 / agzh.ps1 self-update).
+// .cmd files are deliberately excluded: jsDelivr (the fallback mirror) refuses to serve them.
 export const FILES = [
   'agzh.ps1',
-  'install.ps1',
   'patcher.js',
-  '安装汉化.cmd',
-  '卸载汉化.cmd',
   'zh-cn/dict.json',
   'zh-cn/hook.js',
   'zh-cn/shell.js',
@@ -55,7 +53,7 @@ function normalized(f) {
   return Buffer.concat([needBom ? BOM : Buffer.alloc(0), Buffer.from(text, 'utf8')]);
 }
 const encodingProblems = [];
-for (const f of FILES) {
+for (const f of [...FILES, 'install.ps1', '安装汉化.cmd', '卸载汉化.cmd']) {
   const want = normalized(f);
   if (!want.equals(fs.readFileSync(path.join(ROOT, f)))) {
     if (args.includes('--check')) encodingProblems.push(`${f}: wrong line endings / BOM - run: node tools/build-manifest.mjs`);

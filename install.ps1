@@ -52,7 +52,9 @@
       $mf = Join-Path $stage 'manifest.json'
       $manifest = $null
       foreach ($u in @("https://github.com/$Repo/releases/latest/download/manifest.json",
-          "https://cdn.jsdelivr.net/gh/$Repo@latest/manifest.json")) {
+          "https://cdn.jsdelivr.net/gh/$Repo@latest/manifest.json",
+          "https://cdn.jsdelivr.net/gh/$Repo/manifest.json",
+          "https://cdn.jsdelivr.net/gh/$Repo@main/manifest.json")) {
         try {
           Invoke-WebRequest -Uri $u -OutFile $mf -UseBasicParsing -TimeoutSec 30
           $manifest = Read-Manifest $mf

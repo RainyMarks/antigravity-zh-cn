@@ -181,7 +181,9 @@ function Update-PatchFiles([switch]$Force) {
     $remote = $null
     $mf = Join-Path $tmp 'manifest.json'
     foreach ($u in @("https://github.com/$Repo/releases/latest/download/manifest.json",
-        "https://cdn.jsdelivr.net/gh/$Repo@latest/manifest.json")) {
+        "https://cdn.jsdelivr.net/gh/$Repo@latest/manifest.json",
+        "https://cdn.jsdelivr.net/gh/$Repo/manifest.json",
+        "https://cdn.jsdelivr.net/gh/$Repo@main/manifest.json")) {
       try {
         Get-Remote $u $mf
         $remote = Read-Json $mf
@@ -296,7 +298,13 @@ function Do-Install {
     Unregister-AutoTask
     Write-Log '未开启自动更新（-NoAutoUpdate）。'
   }
-  Write-Log "补丁文件位置：$PatchDir"
+  # 安装目录中放一个卸载入口（自动更新不会下载 .cmd 文件）
+  $uninstallCmd = Join-Path $PatchDir '卸载汉化.cmd'
+  if (-not (Test-Path -LiteralPath $uninstallCmd)) {
+    $cmd = "@echo off`r`npowershell.exe -NoProfile -ExecutionPolicy Bypass -File `"%~dp0agzh.ps1`" -Action Uninstall %*`r`necho.`r`npause`r`n"
+    [IO.File]::WriteAllText($uninstallCmd, $cmd, [Text.Encoding]::ASCII)
+  }
+  Write-Log "补丁文件位置：$PatchDir（卸载：双击其中的 卸载汉化.cmd）"
 
   if ($Yes) { return 0 }
   $ans = Read-Host '是否现在启动 Antigravity？[Y/n]'
