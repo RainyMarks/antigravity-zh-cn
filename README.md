@@ -1,7 +1,9 @@
 # Antigravity 简体中文汉化补丁
 
 为 Google **Antigravity** 桌面应用（以智能体为核心的新版，Windows）提供简体中文界面。
-**自动更新**：补丁发布新版本、或 Antigravity 自身更新导致汉化失效后，都会在后台自动重新汉化，无需手动操作。
+
+- **每天检查 Antigravity 更新**：维护端每天自动检查 Antigravity 是否发布新版本，发现更新后同步更新汉化补丁。
+- **用户端全自动**：补丁发布新版本、或 Antigravity 自身更新导致汉化失效后，都会在后台自动重新汉化，无需手动操作。
 
 ![截图](docs/screenshot.png)
 
