@@ -1,10 +1,10 @@
 {
   "name": "antigravity-zh-cn",
-  "version": "1.0.2",
-  "tag": "v1.0.2",
+  "version": "1.0.3",
+  "tag": "v1.0.3",
   "testedAppVersion": "2.23.1",
   "files": {
-    "agzh.ps1": "3f06d80caa524c9d3452fd94bbd2a7961815f3cdb0eb020705bcc3548445832a",
+    "agzh.ps1": "286604b8ee6bc022d4345c7f9a944cdb0bc38f5ab3b7ebec9ec2c4303b3af14a",
     "patcher.js": "5e4dd9b6e59549cad576a713387303853d43f828909632314db137eb27469604",
     "zh-cn/dict.json": "d0bd4791e7ee764269a819f7acbf28a687432010144f043c0465375b38f0d039",
     "zh-cn/hook.js": "5baf633143190aa5cc593337a7eb258e329822b9a37578bc6055db838900a97c",

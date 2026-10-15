@@ -291,6 +291,20 @@ function Do-Install {
     try {
       Register-AutoTask
       Write-Log '已开启自动更新：补丁有新版本或 Antigravity 更新后，会在 Antigravity 退出时自动重新汉化。' 'Green'
+      # 自检：让计划任务运行一次，确认它能访问补丁文件。
+      # 在打包应用（如 Claude 等 MSIX 桌面应用）的终端里安装时，%LOCALAPPDATA% 下的新文件会被重定向到该应用的私有目录，
+      # 计划任务和 Antigravity 都看不到，自动更新会静默失效。
+      $log = Join-Path $LogDir 'agzh.log'
+      $before = if (Test-Path -LiteralPath $log) { (Get-Item -LiteralPath $log).Length } else { 0 }
+      Start-ScheduledTask -TaskName $TaskName
+      $visible = $false
+      for ($i = 0; $i -lt 30 -and -not $visible; $i++) {
+        Start-Sleep -Seconds 1
+        $visible = (Test-Path -LiteralPath $log) -and ((Get-Item -LiteralPath $log).Length -gt $before)
+      }
+      if (-not $visible) {
+        Write-Log '警告：自动更新任务无法访问补丁文件。如果你是在某个应用（例如 AI 助手的桌面版）内置的终端中运行的安装命令，请改为在自己打开的 PowerShell 窗口中重新运行一次。' 'Yellow'
+      }
     } catch {
       Write-Log "注册自动更新计划任务失败：$($_.Exception.Message)" 'Yellow'
     }
@@ -359,27 +373,57 @@ function Do-Status {
   return 0
 }
 
+# 等待 Antigravity 及其更新安装程序全部退出（连续两次检测为空闲）。超时返回 $false。
+function Wait-AppIdle([datetime]$Deadline, [int]$PollSeconds) {
+  $idle = 0
+  while ((Get-Date) -lt $Deadline) {
+    if ((Get-AppProcesses).Count -eq 0 -and -not (Test-InstallerRunning)) { $idle++ } else { $idle = 0 }
+    if ($idle -ge 2) { return $true }
+    Start-Sleep -Seconds $PollSeconds
+  }
+  return $false
+}
+
 function Do-Auto {
   $script:App = Find-AppDir
   if (-not $script:App) { Write-Log '未找到 Antigravity，跳过。'; return 0 }
   if ($AfterQuit) {
-    # 等待 Antigravity 及其更新安装程序全部退出（连续两次检测为空闲）。
+    # 刚退出：先给 Antigravity 和它的更新安装程序一点时间结束。
     Start-Sleep -Seconds 3
-    $deadline = (Get-Date).AddMinutes(20)
-    $idle = 0
-    while ((Get-Date) -lt $deadline) {
-      if ((Get-AppProcesses).Count -eq 0 -and -not (Test-InstallerRunning)) { $idle++ } else { $idle = 0 }
-      if ($idle -ge 2) { break }
-      Start-Sleep -Seconds 3
-    }
-    if ($idle -lt 2) { Write-Log 'Antigravity 仍在运行，稍后由计划任务处理。'; return 0 }
+    $null = Wait-AppIdle (Get-Date).AddMinutes(20) 3
   }
   $cfg = Get-Config
   if ($cfg.autoUpdate) {
     try { $null = Update-PatchFiles } catch { Write-Log "检查更新失败：$($_.Exception.Message)" }
   }
-  if ((Get-AppProcesses).Count -gt 0 -or (Test-InstallerRunning)) { return 0 }
-  return (Invoke-Patcher @('--auto', '--dir', $script:App))
+
+  # 由退出钩子启动的进程没有时间限制，可以等很久；计划任务有 30 分钟执行上限，下一轮会接着等。
+  $deadline = if ($AfterQuit) { (Get-Date).AddHours(12) } else { (Get-Date).AddMinutes(25) }
+  $announced = $false
+  while ($true) {
+    # 安装程序运行期间不能启动 Antigravity.exe（Node 模式），否则会妨碍更新安装。
+    if (Test-InstallerRunning) {
+      if (-not (Wait-AppIdle $deadline 10)) { return 0 }
+    }
+    $code = Invoke-Patcher @('--auto', '--dir', $script:App)
+    if ($code -ne 2) { return $code }
+
+    # 退出码 2：需要重新汉化（例如 Antigravity 刚通过「重启以更新」升级），但 Antigravity 正在运行。
+    # 在后台等它退出后立即打补丁。等待期间释放主锁（不妨碍手动安装），并持有等待锁（避免多个实例同时等待）。
+    if (-not $script:waitLockHeld) {
+      $script:waitLock = New-Object System.Threading.Mutex($false, 'Local\AntigravityZhCN-Wait')
+      try { $script:waitLockHeld = $script:waitLock.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $script:waitLockHeld = $true }
+      if (-not $script:waitLockHeld) { Write-Log '已有后台任务在等待 Antigravity 退出。'; return 0 }
+    }
+    if (-not $announced) {
+      Write-Log 'Antigravity 正在运行，汉化需要更新：将在 Antigravity 退出后自动应用。'
+      $announced = $true
+    }
+    Release-PatchLock
+    $idle = Wait-AppIdle $deadline 10
+    if (-not (Request-PatchLock)) { Write-Log '另一个汉化任务正在处理，本次退出。'; return 0 }
+    if (-not $idle) { Write-Log '等待超时，稍后由计划任务继续处理。'; return 0 }
+  }
 }
 
 # ---------------------------------------------------------------------------
@@ -388,14 +432,22 @@ function Do-Auto {
 if ($Interactive) {
   try { [Console]::OutputEncoding = [Text.Encoding]::UTF8 } catch {}
 }
-$mutex = New-Object System.Threading.Mutex($false, 'Local\AntigravityZhCN-Patch')
-$got = $false
-try {
-  $got = $mutex.WaitOne($(if ($Interactive) { 120000 } else { 0 }))
-} catch [System.Threading.AbandonedMutexException] {
-  $got = $true
+$script:mutex = New-Object System.Threading.Mutex($false, 'Local\AntigravityZhCN-Patch')
+$script:mutexHeld = $false
+$script:waitLock = $null
+$script:waitLockHeld = $false
+
+function Request-PatchLock([int]$TimeoutMs = 0) {
+  if ($script:mutexHeld) { return $true }
+  try { $script:mutexHeld = $script:mutex.WaitOne($TimeoutMs) } catch [System.Threading.AbandonedMutexException] { $script:mutexHeld = $true }
+  return $script:mutexHeld
 }
-if (-not $got) {
+
+function Release-PatchLock {
+  if ($script:mutexHeld) { $script:mutex.ReleaseMutex(); $script:mutexHeld = $false }
+}
+
+if (-not (Request-PatchLock $(if ($Interactive) { 120000 } else { 0 }))) {
   Write-Log '另一个汉化任务正在运行，请稍后再试。'
   exit 0
 }
@@ -412,6 +464,7 @@ try {
   Write-Log "出错：$($_.Exception.Message)" 'Red'
   $exitCode = 1
 } finally {
-  $mutex.ReleaseMutex()
+  Release-PatchLock
+  if ($script:waitLockHeld) { $script:waitLock.ReleaseMutex() }
 }
 exit $exitCode

@@ -43,6 +43,7 @@ irm https://cdn.jsdelivr.net/gh/RainyMarks/antigravity-zh-cn@main/install.ps1 | 
 此外，汉化后的 Antigravity **退出时**会立即触发一次上述检查（会等 Antigravity 自身的更新安装程序结束后再处理），因此通常下次打开时就已经是最新汉化。
 
 > Antigravity 正在运行时无法修改它的文件，所以新汉化总是在你退出 Antigravity 后才生效。
+> 如果 Antigravity 通过「重启以更新」升级后立即重新打开（此时为英文界面），后台会一直等待，你一关闭 Antigravity 就自动重新汉化。
 
 常用命令：
 
@@ -82,6 +83,8 @@ powershell -ExecutionPolicy Bypass -File $agzh -Action Update   # 立即检查�
 **某些地方还是英文？** 部分文字（例如额度、套餐说明）由服务器下发，不在本地代码里，需要逐步补充。欢迎在 [Issues](https://github.com/RainyMarks/antigravity-zh-cn/issues) 中反馈截图或原文。
 
 **Antigravity 更新后变回英文了？** 退出 Antigravity 即可，后台会自动重新汉化；也可以运行 `agzh.ps1 -Action Update`。
+
+**安装时提示“自动更新任务无法访问补丁文件”？** 请在自己打开的 PowerShell 窗口中运行安装命令，不要在其他应用（例如 AI 助手桌面版）内置的终端里运行。部分打包应用（MSIX）会把写入 `%LOCALAPPDATA%` 的新文件重定向到它自己的私有目录，计划任务和 Antigravity 都无法访问这些文件，自动更新会因此失效。
 
 **想修改某条译文？** 编辑 `%LOCALAPPDATA%\antigravity-zh-cn\zh-cn\dict.json` 后运行一次 `安装汉化.cmd` 即可生效；注意下次自动更新会覆盖本地修改，欢迎直接提交 PR。
 

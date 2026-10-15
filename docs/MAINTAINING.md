@@ -98,5 +98,9 @@ npm install          # 仅 tools/extract.mjs 需要 acorn
 - 安装源：`https://github.com/RainyMarks/antigravity-zh-cn/releases/latest/download/manifest.json`，备用 `https://cdn.jsdelivr.net/gh/RainyMarks/antigravity-zh-cn@latest/manifest.json`。
   文件从对应标签的 `raw.githubusercontent.com` 或 jsDelivr 下载，并按 manifest 中的 SHA-256 校验。
 - 触发：计划任务（登录后 1 分钟、之后每小时，通过 `conhost --headless` 静默运行），以及 Antigravity 退出时由 `zh-cn/hook.js` 启动的后台 PowerShell。
+- 需要重新汉化但 Antigravity 正在运行时（patcher.js `--auto` 返回退出码 2，典型情况是「重启以更新」后应用被立即重新打开），
+  `agzh.ps1` 会在后台等待应用退出后立即打补丁：退出钩子启动的进程最多等 12 小时，计划任务每轮最多等 25 分钟（任务执行上限为 30 分钟）。
+  等待期间释放主锁 `Local\AntigravityZhCN-Patch`（不妨碍手动安装），并持有 `Local\AntigravityZhCN-Wait`，避免多个实例同时等待。
+- 安装时会立即运行一次计划任务，确认它能访问补丁文件；在 MSIX 打包应用的终端中安装时，文件会被重定向而导致检查失败，并给出提示。
   后者会先等待 Antigravity 和它的更新安装程序（`%LOCALAPPDATA%\antigravity-updater\` 下的程序）全部退出，避免占用文件、妨碍更新安装。
 - 打补丁前会检查 `app.asar` 内的 `dist/zh-cn-patch.json` 标记：未汉化（Antigravity 刚更新）或补丁版本、配置变化时才重新打补丁。
