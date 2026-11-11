@@ -1,8 +1,8 @@
 {
   "name": "antigravity-zh-cn",
-  "version": "1.0.13",
-  "tag": "v1.0.13",
-  "testedAppVersion": "2.31.0",
+  "version": "1.0.14",
+  "tag": "v1.0.14",
+  "testedAppVersion": "2.31.1",
   "files": {
     "agzh.ps1": "286604b8ee6bc022d4345c7f9a944cdb0bc38f5ab3b7ebec9ec2c4303b3af14a",
     "patcher.js": "5e4dd9b6e59549cad576a713387303853d43f828909632314db137eb27469604",
