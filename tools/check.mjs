@@ -91,8 +91,18 @@ for (const f of ['patcher.js', 'zh-cn/hook.js', 'zh-cn/shell.js']) {
   }
 }
 
+// ---- theme (palettes, contrast, runtime) ----------------------------------
+let themeSummary = 'theme not tested';
+try {
+  const { runThemeTests } = await import('./theme-tests.mjs');
+  const r = await runThemeTests(fail);
+  themeSummary = `theme ${r.palettes} palettes / ${r.checks} checks`;
+} catch (e) {
+  fail('theme tests crashed: ' + (e.stack || e));
+}
+
 console.log(
   failures ? `${failures} problem(s)` : 'OK',
-  `- exact ${Object.keys(dict.exact).length}, templates ${Object.keys(dict.templates).length}, context ${dict.context.length}, ignored ${ignore.size}, shell ${shell.length}`,
+  `- exact ${Object.keys(dict.exact).length}, templates ${Object.keys(dict.templates).length}, context ${dict.context.length}, ignored ${ignore.size}, shell ${shell.length}, ${themeSummary}`,
 );
 process.exit(failures ? 1 : 0);

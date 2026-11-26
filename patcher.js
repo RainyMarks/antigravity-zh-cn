@@ -9,12 +9,14 @@
 //   --uninstall         还原为英文原版
 //   --auto              后台模式：仅在需要时（未打补丁 / 补丁有新版本）才打补丁，不交互
 //   --lang / --no-lang  是否把 Chromium 界面语言设为 zh-CN（会记住选择）
+//   --theme / --no-theme 是否注入外观主题（配色方案、中文字体优化；默认注入，会记住选择）
 //   --force             即使 Antigravity 正在运行也继续（不推荐）
 //
 // 原理：修改 resources\app.asar（Electron 外壳），不改动 language_server.exe。
 //   1. 直接替换外壳中的菜单、托盘、对话框、首次启动向导文字；
 //   2. 在 preload.js 末尾注入翻译器，运行时把主界面（Web UI）的英文替换为中文；
-//   3. 注入 dist/zh-cn-hook.js：退出时触发自动更新检查。
+//   3. 在 preload.js 末尾注入外观主题（theme/，见 docs/THEME.md）；
+//   4. 注入 dist/zh-cn-hook.js：退出时触发自动更新检查。
 // 首次打补丁会把原始 app.asar 备份为 app.asar.zh-cn-backup，还原时使用。
 'use strict';
 
@@ -58,9 +60,11 @@ const readJson = (p, dflt) => {
 const manifest = readJson(path.join(HERE, 'manifest.json'), {});
 const PATCH_VERSION = manifest.version || '0.0.0-dev';
 const configPath = path.join(HERE, 'config.json');
-const config = Object.assign({ lang: false, autoUpdate: false }, readJson(configPath, {}));
+const config = Object.assign({ lang: false, autoUpdate: false, theme: true }, readJson(configPath, {}));
 if (flags.has('--lang')) config.lang = true;
 if (flags.has('--no-lang')) config.lang = false;
+if (flags.has('--theme')) config.theme = true;
+if (flags.has('--no-theme')) config.theme = false;
 
 // ---------------------------------------------------------------------------
 // 日志
@@ -261,6 +265,11 @@ function buildPreloadAddon() {
   return { code: src, count };
 }
 
+// 外观主题：配色变量在这里一次算好，页面里只切换属性。见 theme/build.js。
+function buildThemeAddon() {
+  return require(path.join(HERE, 'theme', 'build.js')).buildThemeAddon({ version: PATCH_VERSION });
+}
+
 function buildHook() {
   const src = fs.readFileSync(path.join(HERE, 'zh-cn', 'hook.js'), 'utf8');
   return fillTemplate(src, 'hook.js', '/*__CFG__*/ {}', jsLiteral({ patchDir: HERE, autoUpdate: !!config.autoUpdate }));
@@ -302,7 +311,8 @@ function applyPatch(asar) {
   const preload = getText('dist/preload.js');
   if (preload === null) throw new Error('app.asar 中没有 dist/preload.js，此版本不受支持');
   const addon = buildPreloadAddon();
-  text.set('dist/preload.js', preload + '\n\n// ==== Antigravity zh-CN patch ====\n' + addon.code + '\n');
+  const theme = config.theme ? buildThemeAddon() : null;
+  text.set('dist/preload.js', preload + '\n\n// ==== Antigravity zh-CN patch ====\n' + addon.code + '\n' + (theme ? '\n' + theme.code : ''));
 
   for (const [p, s] of text) {
     if (s === null) continue;
@@ -324,11 +334,12 @@ function applyPatch(asar) {
     appVersion: pkg.version,
     lang: !!config.lang,
     autoUpdate: !!config.autoUpdate,
+    theme: !!config.theme,
     patchDir: HERE,
     date: new Date().toISOString(),
   };
   addFile(MARKER, Buffer.from(JSON.stringify(markerData, null, 2)));
-  return { ok, missed, total: shell.length, dictCount: addon.count, appVersion: pkg.version };
+  return { ok, missed, total: shell.length, dictCount: addon.count, themeCount: theme ? theme.count : 0, appVersion: pkg.version };
 }
 
 function readMarker(asar) {
@@ -356,16 +367,17 @@ function main() {
   const marker = readMarker(current);
 
   if (flags.has('--status')) {
-    if (marker) log('汉化状态：已汉化（补丁 v' + marker.patch + '，Antigravity ' + marker.appVersion + '）');
+    if (marker) log('汉化状态：已汉化（补丁 v' + marker.patch + '，Antigravity ' + marker.appVersion + (marker.theme ? '，含外观主题' : '') + '）');
     else log('汉化状态：未汉化');
     if (marker && marker.patch !== PATCH_VERSION) log('  本地补丁为 v' + PATCH_VERSION + '，将在 Antigravity 退出后自动应用。');
     return;
   }
 
   if (AUTO && mode === 'install') {
+    // 旧版补丁的标记里没有 theme 字段，当作未注入外观主题。
     const upToDate =
       marker && marker.patch === PATCH_VERSION && !!marker.lang === !!config.lang &&
-      !!marker.autoUpdate === !!config.autoUpdate && marker.patchDir === HERE;
+      !!marker.autoUpdate === !!config.autoUpdate && !!marker.theme === !!config.theme && marker.patchDir === HERE;
     if (upToDate) {
       log('汉化已是最新（v' + PATCH_VERSION + '），无需处理。');
       return;
@@ -421,6 +433,7 @@ function main() {
   log('完成！Antigravity ' + r.appVersion + '，汉化补丁 v' + PATCH_VERSION);
   log('  外壳文字替换：' + r.ok + '/' + r.total);
   log('  界面词典条目：' + r.dictCount);
+  if (r.themeCount) log('  外观主题：' + r.themeCount + ' 套配色（设置 → 外观，或按 Ctrl+Alt+T）');
   if (config.lang) log('  Chromium 界面语言：zh-CN');
   if (r.missed.length) {
     log('  以下条目在当前版本中未找到（已跳过，不影响使用）：');

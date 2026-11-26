@@ -10,7 +10,9 @@
     "extract": "node tools/extract.mjs",
     "collect-missing": "node tools/collect-missing.mjs",
     "apply": "node tools/apply.mjs",
-    "manifest": "node tools/build-manifest.mjs"
+    "manifest": "node tools/build-manifest.mjs",
+    "theme:preview": "node tools/theme-preview.mjs --serve",
+    "theme:audit": "node tools/theme-audit.mjs"
   },
   "devDependencies": {
     "acorn": "^8.19.0",

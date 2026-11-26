@@ -9,7 +9,7 @@
   agzh.ps1 -Action Status       查看当前状态
   agzh.ps1 -Action Auto         后台自动模式（由计划任务和 Antigravity 退出钩子调用）
 
-  可选参数：-AppDir <Antigravity 安装目录>  -Lang / -NoLang  -NoAutoUpdate  -Yes
+  可选参数：-AppDir <Antigravity 安装目录>  -Lang / -NoLang  -Theme / -NoTheme  -NoAutoUpdate  -Yes
 #>
 [CmdletBinding()]
 param(
@@ -19,6 +19,8 @@ param(
   [string]$AppDir,
   [switch]$Lang,
   [switch]$NoLang,
+  [switch]$Theme,
+  [switch]$NoTheme,
   [switch]$NoAutoUpdate,
   [switch]$Yes
 )
@@ -70,10 +72,11 @@ function Write-Json([string]$Path, $Object) {
 
 function Get-Config {
   $c = Read-Json $ConfigFile
-  $cfg = [ordered]@{ lang = $false; autoUpdate = $true; appDir = '' }
+  $cfg = [ordered]@{ lang = $false; autoUpdate = $true; theme = $true; appDir = '' }
   if ($c) {
     if ($null -ne $c.lang) { $cfg.lang = [bool]$c.lang }
     if ($null -ne $c.autoUpdate) { $cfg.autoUpdate = [bool]$c.autoUpdate }
+    if ($null -ne $c.theme) { $cfg.theme = [bool]$c.theme }
     if ($c.appDir) { $cfg.appDir = [string]$c.appDir }
   }
   return $cfg
@@ -280,6 +283,8 @@ function Do-Install {
   $cfg.appDir = $script:App
   if ($Lang) { $cfg.lang = $true }
   if ($NoLang) { $cfg.lang = $false }
+  if ($Theme) { $cfg.theme = $true }
+  if ($NoTheme) { $cfg.theme = $false }
   if ($NoAutoUpdate) { $cfg.autoUpdate = $false }
   Write-Json $ConfigFile $cfg
 
@@ -368,6 +373,7 @@ function Do-Status {
   $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
   Write-Log "自动更新：$(if ($task) { '已开启（计划任务 ' + $TaskName + '）' } else { '未开启' })"
   Write-Log "Chromium 界面语言 zh-CN：$(if ($cfg.lang) { '是' } else { '否' })"
+  Write-Log "外观主题：$(if ($cfg.theme) { '已启用（设置 → 外观，或在 Antigravity 中按 Ctrl+Alt+T）' } else { '未启用（-NoTheme）' })"
   $state = Read-Json $StateFile
   if ($state -and $state.latest) { Write-Log "上次检查到的最新版本：v$($state.latest)" }
   return 0

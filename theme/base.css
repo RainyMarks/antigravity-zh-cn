@@ -1,0 +1,61 @@
+/* Antigravity 汉化补丁 · 外观主题的静态样式。配色变量由 theme/build.js 根据 palettes.json 生成。
+ * 约定：只改 Antigravity 自己的设计变量和字体，不针对具体元素改布局，Antigravity 更新时不容易失效。 */
+
+/* ---- 圆角：紧凑 / 圆润（「标准」即 Antigravity 原生数值）---- */
+:root[data-agzh-radius="compact"] {
+  --radius-md: 0.25rem;
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+}
+:root[data-agzh-radius="compact"] > body[data-agy-theme] {
+  --nux-radius-md: 8px;
+  --nux-radius-lg: 10px;
+  --nux-radius-xl: 14px;
+  --nux-radius-2xl: 16px;
+}
+:root[data-agzh-radius="round"] {
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+:root[data-agzh-radius="round"] > body[data-agy-theme] {
+  --nux-radius-md: 14px;
+  --nux-radius-lg: 20px;
+  --nux-radius-xl: 26px;
+  --nux-radius-2xl: 30px;
+}
+
+/* ---- 中文字体优化 ----
+ * Antigravity 的字体栈里没有中文字体，正文字重又是 350（Google Sans Flex 的设计字重），
+ * 中文回退到系统字体时会落到微软雅黑 Light，笔画偏细。这里声明一个只覆盖中文字符的字体：
+ * 字重 549 及以下用常规体、550 及以上用粗体，放在字体栈最前面；拉丁字母仍由原来的字体负责。 */
+@font-face {
+  font-family: "AGZH CJK";
+  src: local("Microsoft YaHei UI"), local("MicrosoftYaHeiUI"), local("Microsoft YaHei"), local("MicrosoftYaHei"),
+    local("Noto Sans SC"), local("NotoSansSC-Regular"), local("Source Han Sans SC"), local("SourceHanSansSC-Regular");
+  font-weight: 1 549;
+  unicode-range: U+2E80-2FDF, U+3000-303F, U+3100-312F, U+31A0-31FF, U+3200-4DBF, U+4E00-9FFF, U+F900-FAFF,
+    U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+@font-face {
+  font-family: "AGZH CJK";
+  src: local("Microsoft YaHei UI Bold"), local("MicrosoftYaHeiUI-Bold"), local("Microsoft YaHei Bold"), local("MicrosoftYaHei-Bold"),
+    local("Noto Sans SC Bold"), local("NotoSansSC-Bold"), local("Source Han Sans SC Bold"), local("SourceHanSansSC-Bold");
+  font-weight: 550 1000;
+  unicode-range: U+2E80-2FDF, U+3000-303F, U+3100-312F, U+31A0-31FF, U+3200-4DBF, U+4E00-9FFF, U+F900-FAFF,
+    U+FE10-FE1F, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+/* 只在 Antigravity 使用内置字体（Google Sans / Inter）时生效；选择「系统字体」时本来就是常规字重。 */
+:root[data-agzh-cjk] > body[data-agy-font],
+:root[data-agzh-cjk] > body[data-agy-font] .font-sans {
+  font-family: "AGZH CJK", var(--font-sans);
+}
+
+/* ---- 切换配色时整页淡入淡出（View Transitions：只截图一次，与页面复杂度无关）---- */
+:root[data-agzh-switching]::view-transition-old(root),
+:root[data-agzh-switching]::view-transition-new(root) {
+  animation-duration: 0.28s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}

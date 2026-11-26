@@ -1,12 +1,15 @@
 // Talk to the running Antigravity window over the Chrome DevTools Protocol.
-// Antigravity always starts with --remote-debugging-port=0 and writes the chosen
-// port to %APPDATA%\Antigravity\DevToolsActivePort.
+// Since Antigravity 2.33 the DevTools port is off by default: start Antigravity with
+// --remote-debugging-port=0 and it writes the chosen port to
+// %APPDATA%\Antigravity\DevToolsActivePort.
 import fs from 'node:fs';
 import path from 'node:path';
 
 export async function connect() {
   const file = path.join(process.env.APPDATA || '', 'Antigravity', 'DevToolsActivePort');
-  if (!fs.existsSync(file)) throw new Error(`Antigravity is not running (missing ${file})`);
+  if (!fs.existsSync(file)) {
+    throw new Error(`DevTools port not found (${file}). Start Antigravity with --remote-debugging-port=0 (off by default since 2.33).`);
+  }
   const port = fs.readFileSync(file, 'utf8').split(/\r?\n/)[0].trim();
   const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
   const page = list.find((t) => t.type === 'page' && /^https:\/\/127\.0\.0\.1:\d+\//.test(t.url));

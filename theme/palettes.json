@@ -1,0 +1,237 @@
+{
+  "$comment": "配色数据。每一项的 id/label/mode/seeds/syntax 与 Antigravity 插件主题（plugin.json 的 themes[]）格式一致；fx 是补丁自己的扩展：fx.glow 为质感效果的第二种光晕色。defaults 是从未设置过时默认使用的配色。修改后运行 npm run check。",
+  "defaults": {
+    "dark": "dailan",
+    "light": "yuebai"
+  },
+  "themes": [
+    {
+      "id": "moyu",
+      "label": "墨玉",
+      "mode": "dark",
+      "description": "墨色底配玉石青，冷静耐看",
+      "seeds": {
+        "background": "#0D1210",
+        "foreground": "#E6EDEA",
+        "primary": "#6FD5B0",
+        "link": "#74CDE2",
+        "success": "#7CD591",
+        "warning": "#EEC469",
+        "error": "#ED7473"
+      },
+      "fx": {
+        "glow": "#5BB8E8"
+      },
+      "syntax": {
+        "comment": "#75847E",
+        "punctuation": "#9EA7A3",
+        "property": "#92CEE7",
+        "deleted": "#ED7473",
+        "inserted": "#7CD591",
+        "tag": "#EF9494",
+        "constant": "#F7B385",
+        "number": "#F7B385",
+        "string": "#B8D790",
+        "attrName": "#DBCB8E",
+        "builtin": "#7AD7D1",
+        "operator": "#86CCCF",
+        "variable": "#DEE7E3",
+        "attrValue": "#B8D790",
+        "keyword": "#6FD5B0",
+        "function": "#94D3FF",
+        "className": "#E3D18C",
+        "regex": "#F4A988"
+      }
+    },
+    {
+      "id": "hupo",
+      "label": "琥珀",
+      "mode": "dark",
+      "description": "暖炭底配琥珀金，夜间不刺眼",
+      "seeds": {
+        "background": "#14110E",
+        "foreground": "#F0EAE1",
+        "primary": "#F4B768",
+        "link": "#8FC7E2",
+        "success": "#9FCE85",
+        "warning": "#F1C45E",
+        "error": "#E8796C"
+      },
+      "fx": {
+        "glow": "#E8795A"
+      },
+      "syntax": {
+        "comment": "#877F73",
+        "punctuation": "#AAA39A",
+        "property": "#96C6DD",
+        "deleted": "#E8796C",
+        "inserted": "#9FCE85",
+        "tag": "#EC8E76",
+        "constant": "#F49F81",
+        "number": "#F49F81",
+        "string": "#B5D088",
+        "attrName": "#E9C67D",
+        "builtin": "#93CDB3",
+        "operator": "#DEBE9A",
+        "variable": "#E9E4DA",
+        "attrValue": "#B5D088",
+        "keyword": "#F6AB6B",
+        "function": "#EFCD79",
+        "className": "#E1D195",
+        "regex": "#E9979D"
+      }
+    },
+    {
+      "id": "dailan",
+      "label": "黛蓝",
+      "mode": "dark",
+      "description": "深海黛蓝配天青，专注写代码",
+      "seeds": {
+        "background": "#0B111A",
+        "foreground": "#E6ECF3",
+        "primary": "#77B5FB",
+        "link": "#7AC8F5",
+        "success": "#7AD59C",
+        "warning": "#EEC469",
+        "error": "#ED7477"
+      },
+      "fx": {
+        "glow": "#9B87F5"
+      },
+      "syntax": {
+        "comment": "#768193",
+        "punctuation": "#9DA5B1",
+        "property": "#8DCEEE",
+        "deleted": "#ED7477",
+        "inserted": "#7AD59C",
+        "tag": "#EC8A92",
+        "constant": "#F5AB77",
+        "number": "#F5AB77",
+        "string": "#9BDDA8",
+        "attrName": "#E1C885",
+        "builtin": "#72D0D0",
+        "operator": "#84D3E1",
+        "variable": "#DFE5ED",
+        "attrValue": "#9BDDA8",
+        "keyword": "#B7A0FB",
+        "function": "#8CCBFF",
+        "className": "#8ADBDB",
+        "regex": "#F6A88D"
+      }
+    },
+    {
+      "id": "xuanzhi",
+      "label": "宣纸",
+      "mode": "light",
+      "description": "米白纸色配朱砂红，像读一本书",
+      "seeds": {
+        "background": "#FAF6EE",
+        "foreground": "#2C2520",
+        "primary": "#B63D29",
+        "link": "#125F94",
+        "success": "#2F7434",
+        "warning": "#945A00",
+        "error": "#BA2B28"
+      },
+      "fx": {
+        "glow": "#D89B3A"
+      },
+      "syntax": {
+        "comment": "#7C7368",
+        "punctuation": "#6A615B",
+        "property": "#236292",
+        "deleted": "#BA2B28",
+        "inserted": "#2F7434",
+        "tag": "#AC3225",
+        "constant": "#9D4D00",
+        "number": "#9D4D00",
+        "string": "#3E7232",
+        "attrName": "#845500",
+        "builtin": "#007373",
+        "operator": "#1F6E83",
+        "variable": "#332C27",
+        "attrValue": "#3E7232",
+        "keyword": "#AB331F",
+        "function": "#39579E",
+        "className": "#7E5904",
+        "regex": "#A33949"
+      }
+    },
+    {
+      "id": "yuebai",
+      "label": "月白",
+      "mode": "light",
+      "description": "清冷月白配靛蓝，明亮干净",
+      "seeds": {
+        "background": "#F7F9FC",
+        "foreground": "#1F242E",
+        "primary": "#405EC9",
+        "link": "#2063B0",
+        "success": "#1D7339",
+        "warning": "#945A00",
+        "error": "#BE2E31"
+      },
+      "fx": {
+        "glow": "#8A7BE8"
+      },
+      "syntax": {
+        "comment": "#6D7580",
+        "punctuation": "#5D646F",
+        "property": "#0F68A2",
+        "deleted": "#BE2E31",
+        "inserted": "#197037",
+        "tag": "#B23641",
+        "constant": "#9D4D00",
+        "number": "#9D4D00",
+        "string": "#197037",
+        "attrName": "#815800",
+        "builtin": "#007177",
+        "operator": "#006E8E",
+        "variable": "#282E38",
+        "attrValue": "#197037",
+        "keyword": "#6D47B8",
+        "function": "#305EB7",
+        "className": "#007172",
+        "regex": "#A33E25"
+      }
+    },
+    {
+      "id": "qingci",
+      "label": "青瓷",
+      "mode": "light",
+      "description": "淡青瓷色配竹青，柔和护眼",
+      "seeds": {
+        "background": "#F0F9F3",
+        "foreground": "#1E2925",
+        "primary": "#207E5D",
+        "link": "#00678B",
+        "success": "#2B7132",
+        "warning": "#945A00",
+        "error": "#BA3535"
+      },
+      "fx": {
+        "glow": "#3FA7C9"
+      },
+      "syntax": {
+        "comment": "#6A7871",
+        "punctuation": "#586761",
+        "property": "#06658E",
+        "deleted": "#BA3535",
+        "inserted": "#286F2F",
+        "tag": "#AB413E",
+        "constant": "#965200",
+        "number": "#965200",
+        "string": "#3E7232",
+        "attrName": "#7A5B01",
+        "builtin": "#007373",
+        "operator": "#176F7C",
+        "variable": "#25312C",
+        "attrValue": "#3E7232",
+        "keyword": "#007757",
+        "function": "#285E9F",
+        "className": "#7A5B01",
+        "regex": "#9F422B"
+      }
+    }
+  ]
+}

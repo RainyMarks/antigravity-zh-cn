@@ -1,0 +1,217 @@
+/* Antigravity 汉化补丁 · 外观主题的「质感效果」。
+ *
+ * 在补丁配色之上加一层质感：背景光晕和细颗粒、首页点阵、流光描边的输入框、渐变的发送按钮、
+ * 发光的选中指示条、带色调的用户气泡、更有层次的浮层和卡片。
+ * 只在选用了补丁配色并开启「质感效果」时生效（<html data-agzh-fx>，由 runtime.js 设置）。
+ *
+ * 约定：
+ *   1. 只挂在 Antigravity 设计系统自己的语义类和数据属性上（.agy-*、.surface-*、[data-main-content-body] 等），
+ *      不依赖 Tailwind 工具类。用到的挂点由 npm run theme:audit 在 Antigravity 更新后逐个检查。
+ *   2. 只改绘制：背景图、阴影、描边颜色、绝对定位的装饰伪元素。不改尺寸、间距、定位和字体，不会改变布局。
+ *   3. 不用 !important。选择器都以 :root[data-agzh-fx] > body[data-agy-theme] 开头，
+ *      比 Antigravity 对应的规则（body[data-agy-theme] …、body[data-agy-theme].dark …）多一个属性选择器。
+ *   4. 颜色全部取自 --agzh-* 变量（theme/tokens.js 推导；光晕浓度已按文字对比度封顶），这里不写颜色值。
+ *   5. 打开内置浏览器时，页面上有一块透明「窗洞」露出底下的原生浏览器视图（body[data-has-browser-hole]），
+ *      大面积的背景图会把它盖住，所以背景类效果在这时关闭；输入框、卡片等不透明表面上的效果不受影响。
+ */
+
+/* 细颗粒：极淡的噪点，避免大面积柔和渐变出现色带。深色界面用亮点，浅色界面用暗点。 */
+:root {
+  --agzh-grain-dark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.05'/%3E%3C/svg%3E");
+  --agzh-grain-light: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.045'/%3E%3C/svg%3E");
+}
+
+/* Windows「对比度主题」（强制颜色）下全部关闭，交给系统配色。 */
+@media (forced-colors: none) {
+  /* ---- 1. 背景氛围 ---- */
+
+  /* 主内容区：右上、左下各一团淡光（对话区标准：光晕最亮处的弱化文字仍满足 AA），再叠一层细颗粒 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) [data-main-content-body] {
+    background-image:
+      var(--agzh-grain),
+      radial-gradient(70% 55% at 100% 0%, var(--agzh-ambient-2), transparent 70%),
+      radial-gradient(60% 50% at 0% 100%, var(--agzh-ambient-1), transparent 70%);
+    box-shadow: 0 24px 64px -36px var(--agzh-shadow);
+  }
+
+  /* 首页另有更浓的舞台光晕（见下），主内容区这里只留颗粒 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) [data-main-content-body]:has(.agy-home) {
+    background-image: var(--agzh-grain);
+  }
+
+  /* 外壳（侧栏背后）：只加细颗粒。侧栏的弱化文字在外壳底色上没有对比度余量，不加光晕。 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-shell {
+    background-image: var(--agzh-grain);
+  }
+
+  /* 首页：顶部一团主色光；底部正中一团第二色光，像光从输入框背后透出来；左侧一团很淡的陪衬（舞台区标准）。
+   * 原生首页的上半部分是留白，输入框贴底，光晕正好落在这两处。 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-home {
+    background-image:
+      radial-gradient(72% 56% at 50% 0%, var(--agzh-stage-1), transparent 74%),
+      radial-gradient(64% 42% at 50% 100%, var(--agzh-stage-2), transparent 72%),
+      radial-gradient(34% 40% at 0% 62%, var(--agzh-ambient-1), transparent 70%);
+  }
+
+  /* 首页点阵和问候语用 .agy-home 的两个伪元素。.agy-home 自带 position: relative 和 isolation: isolate，
+   * z-index: -1 的伪元素画在首页内容之下、光晕之上，绝对定位，不占位置。 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-home::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: radial-gradient(circle at center, var(--agzh-grid) 0.8px, transparent 1.4px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(62% 56% at 50% 28%, #000 8%, transparent 78%);
+    mask-image: radial-gradient(62% 56% at 50% 28%, #000 8%, transparent 78%);
+  }
+
+  /* 首页问候语。Antigravity 只给 Google 内部用户显示问候语（[data-testid="home-greeting"]），外部用户首页上半部分是空的。
+   * 这里补上一行：文字按 <html data-agzh-daypart>（runtime.js 按本地时间设置）选取；位置参照原生问候语，
+   * 在首页顶部留白 clamp(72px, 32vh - 66px, 264px) 之后；窗口太矮时不显示，避免压到建议卡片。
+   * 渐变文字的每一段颜色在光晕最亮处都满足大字号 3:1（由测试检查）。 */
+  :root[data-agzh-fx][data-agzh-daypart="morning"] { --agzh-greeting: "早上好，今天从哪里开始？"; }
+  :root[data-agzh-fx][data-agzh-daypart="noon"] { --agzh-greeting: "中午好，先把这件事做完"; }
+  :root[data-agzh-fx][data-agzh-daypart="afternoon"] { --agzh-greeting: "下午好，接着推进吧"; }
+  :root[data-agzh-fx][data-agzh-daypart="evening"] { --agzh-greeting: "晚上好，想做点什么？"; }
+  :root[data-agzh-fx][data-agzh-daypart="night"] { --agzh-greeting: "夜深了，做完早点休息"; }
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-home::after {
+    content: var(--agzh-greeting, "");
+    position: absolute;
+    z-index: -1;
+    top: calc(24px + clamp(72px, 32vh - 66px, 264px) - 0.3em);
+    left: 50%;
+    width: max-content;
+    max-width: calc(100% - 48px);
+    transform: translateX(-50%);
+    font-size: clamp(24px, 1.6vw + 12px, 36px);
+    font-weight: 450;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: transparent;
+    background-image: linear-gradient(100deg, var(--foreground) 15%, var(--primary) 60%, var(--agzh-accent-2) 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    pointer-events: none;
+    user-select: none;
+  }
+  /* Google 内部版本自带问候语时让位；窗口太矮时不显示（两条规则与上面同一前缀、写在后面，因此能覆盖它） */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-home:has([data-testid="home-greeting"])::after {
+    content: none;
+  }
+  @media (max-height: 560px) {
+    :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-home::after {
+      content: none;
+    }
+  }
+
+  /* 原生首页的顶部光晕由上面的舞台光晕代替，避免叠两层 */
+  :root[data-agzh-fx] > body[data-agy-theme]:not([data-has-browser-hole="true"]) .agy-sheet:has(.agy-home) {
+    background-image: none;
+  }
+
+  /* 主内容卡片的描边：原生是 0.5px 的灰线，换成带配色色调的亮边 */
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-inset-shell {
+    --card-edge: var(--agzh-edge);
+  }
+
+  /* ---- 2. 输入框 ----
+   * 外框 .surface-composer 留了 1px 内边距，露出的就是外框自己的背景，相当于一圈描边：
+   * 给外框铺一层渐变，就得到不改尺寸的流光描边。外圈 4px 的框架色和 1px 细线沿用原生的写法，
+   * 四周再加一圈同色柔光；聚焦时细线提亮，再加一圈光环。 */
+  :root[data-agzh-fx] > body[data-agy-theme] .surface-composer {
+    background-image: linear-gradient(135deg, var(--agzh-edge-strong), var(--agzh-edge) 38%, var(--agzh-edge) 62%, var(--agzh-edge-alt));
+    box-shadow:
+      inset 0 1px 2px var(--agzh-inner),
+      0 0 0 4px var(--onyx-frame),
+      0 0 0 5px var(--agzh-edge),
+      0 0 48px -12px var(--agzh-glow-shadow),
+      0 2px 8px -2px var(--agzh-shadow-soft);
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] .surface-composer:focus-within {
+    box-shadow:
+      inset 0 1px 2px var(--agzh-inner),
+      0 0 0 4px var(--onyx-frame),
+      0 0 0 5px var(--agzh-edge-strong),
+      0 0 0 9px var(--agzh-halo),
+      0 0 60px -10px var(--agzh-glow-shadow),
+      0 2px 8px -2px var(--agzh-shadow-soft);
+  }
+  /* 内卡片原生带一圈 1px 的描边阴影，正好压在外框露出的那 1px 上，会把流光描边盖住：只保留顶部高光。
+   * 内卡片的底色不动（占位文字在它上面本来就没有对比度余量）。 */
+  :root[data-agzh-fx] > body[data-agy-theme] .surface-composer > .surface-composer-card,
+  :root[data-agzh-fx] > body[data-agy-theme] .surface-composer:focus-within > .surface-composer-card {
+    box-shadow: inset 0 1px 0 var(--glass-highlight);
+  }
+
+  /* ---- 3. 发送按钮：主色到第二色的渐变（按钮图标在整条渐变上都满足 4.5:1），带同色投影 ---- */
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-send-button:not(:disabled) {
+    background-image: linear-gradient(135deg, var(--primary), var(--agzh-accent-2));
+    box-shadow:
+      inset 0 1px 0 var(--agzh-highlight),
+      0 6px 16px -6px var(--agzh-glow-shadow);
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-send-button:not(:disabled):hover {
+    box-shadow:
+      inset 0 1px 0 var(--agzh-highlight),
+      0 8px 22px -6px var(--agzh-glow-shadow);
+  }
+
+  /* ---- 4. 侧栏：选中的对话底色带一点强调色，左侧一道发光的竖条（.agy-sidebar-row 自带 position: relative） ---- */
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-sidebar-row[data-selected="true"] {
+    background-image: linear-gradient(90deg, var(--agzh-tint), var(--agzh-tint-end) 72%, transparent);
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-sidebar-row[data-selected="true"]::before {
+    content: "";
+    position: absolute;
+    left: 1px;
+    top: 26%;
+    bottom: 26%;
+    width: 3px;
+    border-radius: 3px;
+    background-color: var(--primary);
+    box-shadow: 0 0 10px var(--agzh-glow-shadow);
+    pointer-events: none;
+  }
+
+  /* ---- 5. 用户消息气泡：外框同样靠 1px 内边距做描边，铺一层渐变；气泡本身带一点强调色调 ---- */
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-user-bubble-frame {
+    background-image: linear-gradient(135deg, var(--agzh-edge-strong), var(--agzh-edge) 50%, var(--agzh-edge-alt));
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] .agy-user-bubble {
+    background-image: linear-gradient(135deg, var(--agzh-tint), var(--agzh-tint-end));
+    /* 去掉原生的 1px 描边阴影，让外框的渐变描边露出来 */
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 14px 34px -22px var(--agzh-glow-shadow);
+  }
+
+  /* ---- 6. 浮层、菜单、对话框：玻璃描边带配色色调，投影更深并带一点同色光 ---- */
+  :root[data-agzh-fx] > body[data-agy-theme] .surface-glass {
+    border-color: var(--agzh-edge);
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] :is(.agy-overlay, .agy-dialog) {
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 26px 60px -26px var(--agzh-shadow),
+      0 12px 34px -22px var(--agzh-glow-shadow);
+  }
+
+  /* ---- 7. 卡片：描边带配色色调，顶部一层微光（深色界面里微光被对比度规则压得很淡）；可点击的卡片悬停时描边提亮 ---- */
+  :root[data-agzh-fx] > body[data-agy-theme] :is(.agy-card, .artifact-card, .agy-tip-card) {
+    border-color: var(--agzh-edge);
+    background-image: linear-gradient(180deg, var(--agzh-sheen), transparent 56px);
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] :is(.artifact-card, .agy-tip-card) {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  :root[data-agzh-fx] > body[data-agy-theme] :is(.artifact-card, .agy-tip-card):hover {
+    border-color: var(--agzh-edge-strong);
+    box-shadow: 0 14px 34px -22px var(--agzh-glow-shadow);
+  }
+}

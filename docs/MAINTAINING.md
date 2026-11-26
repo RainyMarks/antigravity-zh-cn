@@ -14,9 +14,11 @@ zh-cn/dict.json          词典：exact（精确匹配）、templates（带 {0} 
 zh-cn/translator.js      注入 preload.js 的运行时翻译器
 zh-cn/shell.js           Electron 外壳（主进程）字符串替换表
 zh-cn/hook.js            注入主进程：Antigravity 退出时触发自动更新
+theme/                   外观主题：配色数据、变量推导、注入页面的运行时与设置面板（见 docs/THEME.md）
 i18n/ignore.json         有意不翻译的字符串（产品名、代码等），避免重复出现在待译列表中
 tools/                   维护工具（见下）
 docs/TRANSLATION_GUIDE.md  译文规范与术语表
+docs/THEME.md            外观主题的原理、配色格式与兼容性检查
 ```
 
 ## 准备
@@ -34,9 +36,12 @@ npm install          # 仅 tools/extract.mjs 需要 acorn
 2. **提取新增字符串**
 
    ```bash
-   npm run fetch-bundle     # 通过 DevTools 端口找到本地服务，下载界面代码到 .work/main.js
+   npm run fetch-bundle     # 找到本地服务，下载界面代码（.work/main.js 和样式表）
    npm run extract          # 解析代码，未翻译的新字符串写入 .work/todo.json
    ```
+
+   `fetch-bundle` 优先通过 DevTools 端口定位界面；Antigravity 2.33 起默认不开该端口，此时改为探测
+   `language_server.exe` 监听的本机端口，无需带参数重启 Antigravity。
 
    `.work/` 已被 git 忽略。`main.js` 是 Google 的代码，**不要提交**。
 
@@ -47,6 +52,8 @@ npm install          # 仅 tools/extract.mjs 需要 acorn
    ```
 
    这份列表可能包含你自己的对话标题、文件名等，翻译前请先删掉。
+   `collect-missing` 通过 DevTools 端口读取翻译器的记录，Antigravity 2.33 起默认不开该端口，
+   需要先退出 Antigravity，再从命令行带 `--remote-debugging-port=0` 参数启动它。
 
 4. **翻译**：把 `.work/todo.json`（字符串数组）翻译成 `{ "英文": "中文" }` 对象，保存为例如 `.work/translated.json`。
    可以直接交给 Claude 等 AI 处理，附上 `docs/TRANSLATION_GUIDE.md` 作为规范。约定如下：
@@ -68,12 +75,21 @@ npm install          # 仅 tools/extract.mjs 需要 acorn
    （`npx @electron/asar extract <asar> <目录>`）对照新代码修改即可。`preload.js` 中的 `showContextMenu` 和 `notification:send`
    两条替换尤其重要，它们负责原生右键菜单和系统通知的翻译。
 
-6. **本地验证**：双击 `安装汉化.cmd`（会把当前工作区的文件安装到 `%LOCALAPPDATA%\antigravity-zh-cn`），启动 Antigravity 查看效果。
-
-7. **测试并发布**
+6. **检查外观主题**
 
    ```bash
-   npm run check                                          # 词典校验 + 翻译器单元测试
+   npm run theme:audit      # 主题依赖的设计变量、DOM 标记、IPC 通道是否都还在（需先 fetch-bundle）
+   npm run theme:preview    # 可选：在 http://127.0.0.1:4791/ 预览配色
+   ```
+
+   有缺失项时按 [THEME.md](THEME.md) 的「Antigravity 更新后」一节处理。
+
+7. **本地验证**：双击 `安装汉化.cmd`（会把当前工作区的文件安装到 `%LOCALAPPDATA%\antigravity-zh-cn`），启动 Antigravity 查看效果。
+
+8. **测试并发布**
+
+   ```bash
+   npm run check                                          # 词典校验 + 翻译器与外观主题的单元测试
    node tools/build-manifest.mjs --bump patch --app 2.24.0   # 升版本号、记录测试过的 Antigravity 版本、刷新哈希
    git commit -am "Update translations for Antigravity 2.24.0"
    git tag v1.0.1
@@ -89,7 +105,11 @@ npm install          # 仅 tools/extract.mjs 需要 acorn
 ## 调试
 
 - 已汉化的 Antigravity 中，`window.__agZhCn` 提供 `version`、`stats()`、`missing()`、`clearMissing()`。
-  Antigravity 启动时自带 `--remote-debugging-port=0`，端口写在 `%APPDATA%\Antigravity\DevToolsActivePort`；`tools/cdp.mjs` 演示了如何连接。
+- 外观主题的当前状态写在 `<html>` 的 `data-agzh-theme`、`data-agzh-contrast`、`data-agzh-fx`、`data-agzh-daypart`、
+  `data-agzh-radius`、`data-agzh-cjk` 属性上，设置保存在 `%APPDATA%\Antigravity\app_storage.json` 的 `agzh.theme` 键里
+  （删掉这个键会恢复成默认配色，并再显示一次首次提示）。
+- 需要用 DevTools 协议调试时，带 `--remote-debugging-port=0` 参数启动 Antigravity（2.33 起默认不开），
+  端口会写在 `%APPDATA%\Antigravity\DevToolsActivePort`；`tools/cdp.mjs` 演示了如何连接。
 - 用户端日志：`%LOCALAPPDATA%\antigravity-zh-cn\logs\agzh.log`、`patcher.log`。
 - 计划任务：`Get-ScheduledTask AntigravityZhCN`。
 
